@@ -4,8 +4,11 @@ class FlowManager {
     }
 
     // Establecer el flujo y paso inicial para un usuario
-    setFlow(userId, flowName, initialStep = 0) {
-        this.userFlows[userId] = { flowName, currentStep: initialStep };
+    setFlow(userId, flowName, initialStep = 0, flowData = {}) {
+        const actualFlowData = this.userFlows[userId]?.flowData || {};
+        const _flowData = { ...actualFlowData, ...flowData };
+        
+        this.userFlows[userId] = { flowName, currentStep: initialStep, flowData: _flowData };
     }
 
     // Obtener el flujo actual de un usuario

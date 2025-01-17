@@ -7,7 +7,7 @@ const messageResponder = async (messageType, msg, sock, sender) => {
         case 'text':
         case 'text_extended': {
             const text = msg.message.conversation || msg.message.extendedTextMessage?.text;
-            await FlowMapper.handleMessage(sender, text, sock);
+            await FlowMapper.handleMessage(sender, text, sock, messageType);
             break;
         }
         case 'image': {
@@ -18,8 +18,6 @@ const messageResponder = async (messageType, msg, sock, sender) => {
                 sock,
                 'image'
             );
-
-            await sock.sendMessage(sender, { text: `He recibido tu imagen y la he guardado en` });
             
             break;
         }
