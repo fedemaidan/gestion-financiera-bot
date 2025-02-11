@@ -6,5 +6,5 @@ admin.initializeApp({
     storageBucket: "factudata-3afdf.appspot.com"
   });
   
-  
-module.exports = { admin };
+const db = admin.firestore();
+module.exports = { admin, db };

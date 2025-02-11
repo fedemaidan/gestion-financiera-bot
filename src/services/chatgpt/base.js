@@ -36,9 +36,7 @@ async function getByChatgpt4Vision(urlsImagenesFacturas, prompt, temperature = 0
 
       console.log("responseeeee", response.choices[0].message.content)
       return limpiarJson(response.choices[0].message.content);
-}
-    
-      
+}  
     
 async function getByChatgpt35TurboByText(prompt) {
       const response = await openai.chat.completions.create({
