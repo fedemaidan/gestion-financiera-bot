@@ -1,11 +1,17 @@
 const { google } = require('googleapis');
-const {formatearFechaFirestore} = require('../utils/fechas')
+const { formatearFechaFirestore } = require('../utils/fechas');
+
+// Cargar las credenciales desde la variable de entorno
+const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
 
 // Autenticación con Google Sheets
 const auth = new google.auth.GoogleAuth({
-  keyFile: './config/drive_json_key.json', // Archivo de credenciales
+  credentials, // Se pasan las credenciales directamente
   scopes: ['https://www.googleapis.com/auth/spreadsheets'], // Permisos de edición en Sheets
 });
+
+module.exports = auth;
+
 
 const sheets = google.sheets({ version: 'v4', auth });
 
