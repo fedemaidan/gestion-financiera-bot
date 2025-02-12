@@ -10,18 +10,17 @@ async function saveFileToStorage(buffer, fileName, filePath, mimeType) {
     try {
         // Referencia al archivo en Firebase Storage
         const file = bucket.file(filePath);
-        console.log(1)
         // Subir el archivo
         await file.save(buffer, {
             metadata: { contentType: mimeType },
         });
-        console.log(2)
+
         // Obtener una URL firmada del archivo
         const [signedUrl] = await file.getSignedUrl({
             action: 'read',
             expires: '03-09-2491', // Fecha arbitraria
         });
-        console.log(3)
+        
         console.log(`Archivo subido a Firebase Storage: ${signedUrl}`);
         return { success: true, signedUrl };
     } catch (error) {
