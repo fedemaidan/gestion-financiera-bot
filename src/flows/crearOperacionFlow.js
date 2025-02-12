@@ -134,7 +134,7 @@ const crearOperacionFlow = {
                     await sock.sendMessage(userId, {
                         text: '3️⃣ ¿Qué tipo de cheque es? Responde con el número correspondiente:\n\n' +
                             '1️⃣ Gestión 1.2\n' +
-                            '2️⃣ Gestión 1.3\n' +
+                            '2️⃣ Gestión 1.7\n' +
                             '3️⃣ Diferido\n' +
                             '4️⃣ Pecho',
                     });
