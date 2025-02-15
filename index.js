@@ -18,6 +18,15 @@ const startBot = async () => {
         // Delegar manejo al messageResponder
         await messageResponder(messageType, msg, sock, sender);
     });
+
+    setInterval(() => {
+        console.log('Keep-alive');
+      }, 5 * 60 * 1000); // Cada 5 minutos
+
+    setInterval(async () => {
+        await sock.sendPresenceUpdate('available');
+      }, 10 * 60 * 1000); // Cada 10 minutos
+      
 };
 
 startBot();

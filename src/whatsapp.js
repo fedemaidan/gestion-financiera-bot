@@ -30,7 +30,7 @@ const connectToWhatsApp = async () => {
     const sock = makeWASocket({ auth: state });
     
     sock.ev.on('connection.update', (update) => {
-        const { connection, qr } = update;
+        const { connection, qr, lastDisconnect } = update;
 
         if (qr) {
             latestQR = qr;
@@ -39,12 +39,15 @@ const connectToWhatsApp = async () => {
 
         if (connection === 'close') {
             console.log('Conexión cerrada. Reintentando...');
-            connectToWhatsApp();
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== 401;
+            if (shouldReconnect) {
+                connectToWhatsApp();
+            } else {
+                console.log('🚫 Se requiere reautenticación manual.');
+            }
+
         } else if (connection === 'open') {
             console.log('Conectado a WhatsApp');
-            setTimeout(() => {
-                // saveSessionToStorage();
-            }, 2000);
         }
     });
 
