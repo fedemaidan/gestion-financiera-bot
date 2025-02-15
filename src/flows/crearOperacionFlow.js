@@ -89,7 +89,9 @@ const crearOperacionFlow = {
     },
 
     async handle(userId, message, step, sock, messageType) {
-        if (messageType !== 'text' || messageType !== 'text_extended') {
+        //if (messageType !== 'text' || messageType !== 'text_extended') {
+        const esTexto = messageType !== 'text' ? messageType !== 'text_extended' : false;
+        if (esTexto) {
             await sock.sendMessage(userId, { text: '⚠️ Por favor, responde con texto para continuar.' });
             return;
         }
