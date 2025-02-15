@@ -1,9 +1,8 @@
-const {connectToWhatsApp, loadSessionFromStorage} = require('./src/whatsapp');
+const {connectToWhatsApp } = require('./src/whatsapp');
 const getMessageType = require('./src/utils/getMessageType');
 const messageResponder = require('./src/utils/messageResponder');
 
 const startBot = async () => {
-    // await loadSessionFromStorage();
     const sock = await connectToWhatsApp();
 
     sock.ev.on('messages.upsert', async (message) => {
