@@ -9,7 +9,6 @@ const bucket = admin.storage().bucket();
 const app = express();
 let latestQR = null;
 
-const sessionFolderPath = `whatsappSessions/${process.env.SESSION_WHATSAPP || 'general_session'}`;
 const authDir = path.resolve('./auth');
 
 app.get('/qr', (req, res) => {

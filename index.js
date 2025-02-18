@@ -6,6 +6,7 @@ const startBot = async () => {
     const sock = await connectToWhatsApp();
 
     sock.ev.on('messages.upsert', async (message) => {
+
         const msg = message.messages[0];
         if (!msg.message || msg.key.fromMe) return;
 

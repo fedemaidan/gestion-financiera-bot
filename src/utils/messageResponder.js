@@ -40,24 +40,21 @@ const messageResponder = async (messageType, msg, sock, sender) => {
             break;
         }
         case 'document': {
-            const filePath = await downloadMedia(msg.message, 'document');
-            if (filePath) {
-                await sock.sendMessage(sender, { text: `He recibido tu documento y lo he guardado en: ${filePath}` });
-            } else {
-                await sock.sendMessage(sender, { text: 'No pude guardar el documento. Intenta nuevamente.' });
-            }
+            await FlowMapper.handleMessage(
+                sender,
+                msg,
+                sock,
+                'document'
+            );
             break;
         }
         case 'document-caption': {
-            const caption = msg.message.documentWithCaptionMessage?.message?.documentMessage?.caption;
-            const filePath = await downloadMedia(msg.message, 'document_with_caption');
-            if (filePath) {
-                await sock.sendMessage(sender, {
-                    text: `He recibido tu documento con texto: "${caption}" y lo he guardado en: ${filePath}`,
-                });
-            } else {
-                await sock.sendMessage(sender, { text: 'No pude guardar el documento. Intenta nuevamente.' });
-            }
+            await FlowMapper.handleMessage(
+                sender,
+                msg,
+                sock,
+                'document-caption'
+            );
             break;
         }
         default: {

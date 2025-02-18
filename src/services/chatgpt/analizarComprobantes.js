@@ -11,6 +11,28 @@ const analizarComprobantes = async (filePath) => {
         //     'numero_operación': '99146705059'
         //   }
         //   return { respuesta: r_fake, prompt: "prompt"};
+        // return {
+        //     prompt: "prompt",
+        //     respuesta: {
+        //         tipo: 'CHEQUES',
+        //         cheques: [
+        //           {
+        //             monto: 855563,
+        //             banco_emisor: 'Banco de La Pampa',
+        //             numero_comprobante: '64991759',
+        //             cuit: null,
+        //             fecha_pago: '2025-02-01'
+        //           },
+        //           {
+        //             monto: 1483089,
+        //             banco_emisor: 'Galicia',
+        //             numero_comprobante: '62531778',
+        //             cuit: null,
+        //             fecha_pago: '2025-02-04'
+        //           }
+        //         ]
+        //       }
+        // }
         const comprobantes = [
             {
                 name: "Transferencia",

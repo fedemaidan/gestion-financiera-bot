@@ -18,8 +18,6 @@ const analizarModificacionComprobante = async (comprobante, mensajeUsuario) => {
             "numero_comprobante": "Nuevo número si el usuario lo menciona",
             "banco_emisor": "Nuevo banco si el usuario lo menciona",
             "fecha_pago": "Nueva fecha si el usuario lo menciona",
-            "cliente_envia": "Nuevo cliente emisor si el usuario lo menciona",
-            "cliente_recibe": "Nuevo cliente receptor si el usuario lo menciona",
             "tipo_cheque": "Nuevo tipo de cheque si el usuario lo menciona"
         }
 

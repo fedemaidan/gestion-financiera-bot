@@ -1,61 +1,73 @@
 const fs = require('fs');
+const path = require('path');
+const os = require('os');
 const { promisify } = require('util');
 const { downloadMediaMessage } = require('@whiskeysockets/baileys');
 const { admin } = require('./firebaseUtils'); // Configuración de Firebase Admin
+const { convertPdfToJpeg } = require('../../utils/convertPdfToJpeg');
 
-// Función para guardar un archivo en Firebase Storage
+// Guardar un archivo en Firebase Storage
 async function saveFileToStorage(buffer, fileName, filePath, mimeType) {
     const bucket = admin.storage().bucket();
-    
-    try {
-        // Referencia al archivo en Firebase Storage
-        const file = bucket.file(filePath);
-        // Subir el archivo
-        await file.save(buffer, {
-            metadata: { contentType: mimeType },
-        });
 
-        // Obtener una URL firmada del archivo
+    try {
+        const file = bucket.file(filePath);
+        await file.save(buffer, { metadata: { contentType: mimeType } });
+
         const [signedUrl] = await file.getSignedUrl({
             action: 'read',
-            expires: '03-09-2491', // Fecha arbitraria
+            expires: '03-09-2491',
         });
-        
-        console.log(`Archivo subido a Firebase Storage: ${signedUrl}`);
+
+        console.log(`Archivo subido: ${signedUrl}`);
         return { success: true, signedUrl };
     } catch (error) {
-        console.error('Error al guardar archivo en Firebase Storage:', error.message);
+        console.error('Error al guardar archivo en Firebase:', error.message);
         return { success: false, error: error.message };
     }
 }
 
-// Función para descargar una imagen y subirla a Firebase Storage
+// Guardar imagen o PDF en Firebase
 async function saveImageToStorage(message, senderPhone) {
     try {
-        // Descargar la imagen usando Baileys
+        console.log('Guardando imagen en Firebase...', message);
+        const mimeType = message.message.documentMessage.mimetype;
         const buffer = await downloadMediaMessage(message, 'buffer');
-
-        // Generar un nombre de archivo único
-        const date = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
+        const date = new Date().toISOString().split('T')[0];
         const randomNumber = Math.floor(Math.random() * 1000000);
-        const fileName = `${randomNumber}.jpeg`;
 
-        // Ruta en Firebase Storage basada en el número de teléfono y la fecha
-        const filePath = `cheques/${senderPhone}/${date}/${fileName}`;
+        if (mimeType === 'application/pdf') {
+            // Guardar PDF temporalmente
+            const tempDir = os.tmpdir();
+            const pdfPath = path.join(tempDir, `${randomNumber}.pdf`);
+            fs.writeFileSync(pdfPath, buffer);
 
-        // Guardar la imagen en Firebase Storage
-        const mimeType = 'image/jpeg';
-        const storageResult = await saveFileToStorage(buffer, fileName, filePath, mimeType);
+            // Convertir PDF a imágenes
+            const outputDir = path.join(tempDir, `pdf_images_${randomNumber}`);
+            fs.mkdirSync(outputDir, { recursive: true });
 
-        if (storageResult.success) {
-            console.log(`Imagen guardada en: ${storageResult.signedUrl}`);
-            return storageResult.signedUrl;
+            const { outputPrefix, pageCount } = await convertPdfToJpeg(pdfPath, outputDir);
+
+            if (pageCount === 0) {
+                console.error('No se generaron imágenes del PDF.');
+                return null;
+            }
+
+            // Subir la primera imagen generada
+            const firstPagePath = `${outputPrefix}-1.jpeg`;
+            const imageBuffer = fs.readFileSync(firstPagePath);
+
+            const filePath = `cheques/${senderPhone}/${date}/${randomNumber}.jpeg`;
+            const storageResult = await saveFileToStorage(imageBuffer, `${randomNumber}.jpeg`, filePath, 'image/jpeg');
+
+            return storageResult.success ? storageResult.signedUrl : null;
         } else {
-            console.error('Error guardando la imagen en Firebase Storage:', storageResult.error);
-            return null;
+            // Guardar imagen normal
+            const filePath = `cheques/${senderPhone}/${date}/${randomNumber}.jpeg`;
+            return await saveFileToStorage(buffer, `${randomNumber}.jpeg`, filePath, 'image/jpeg');
         }
     } catch (error) {
-        console.error('Error descargando o guardando la imagen:', error.message);
+        console.error('Error descargando/guardando archivo:', error.message);
         return null;
     }
 }

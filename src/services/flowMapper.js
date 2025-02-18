@@ -16,8 +16,7 @@ class FlowMapper {
                     await defaultFlow.handle(userId, message, sock, messageType);
             }
         } else {
-            if (messageType === 'image') {
-                // Disparar el flujo de crear operación si se recibe una imagen
+            if (messageType === 'image' || messageType === 'document' || messageType === 'document-caption') {
                 FlowManager.setFlow(userId, 'CREAR_OPERACION');
                 await crearOperacionFlow.start(userId, message, sock, messageType);
             } else {
