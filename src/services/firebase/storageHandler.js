@@ -31,7 +31,8 @@ async function saveFileToStorage(buffer, fileName, filePath, mimeType) {
 async function saveImageToStorage(message, senderPhone) {
     try {
         console.log('Guardando imagen en Firebase...', message);
-        const mimeType = message.message.documentMessage.mimetype;
+        const element = message.message.imageMessage || message.message.videoMessage || message.message.audioMessage || message.message.documentMessage;
+        const mimeType = element.mimetype;
         const buffer = await downloadMediaMessage(message, 'buffer');
         const date = new Date().toISOString().split('T')[0];
         const randomNumber = Math.floor(Math.random() * 1000000);
@@ -64,8 +65,9 @@ async function saveImageToStorage(message, senderPhone) {
         } else {
             // Guardar imagen normal
             const filePath = `cheques/${senderPhone}/${date}/${randomNumber}.jpeg`;
-            return await saveFileToStorage(buffer, `${randomNumber}.jpeg`, filePath, 'image/jpeg');
-        }
+            const storageResult = await saveFileToStorage(buffer, `${randomNumber}.jpeg`, filePath, 'image/jpeg');
+            return storageResult.success ? storageResult.signedUrl : null
+    }
     } catch (error) {
         console.error('Error descargando/guardando archivo:', error.message);
         return null;

@@ -42,7 +42,7 @@ const crearOperacionFlow = {
             // Descargar y guardar la imagen en Firebase Storage
             const phoneNumber = userId.split('@')[0];
             const imageUrl = await saveImageToStorage(message, phoneNumber);
-            // const imageUrl = "soy una url";
+            
             if (!imageUrl) {
                 FlowManager.resetFlow(userId);
                 await sock.sendMessage(userId, { text: '⚠️ No pude procesar la imagen. Por favor, intenta nuevamente.' });
@@ -174,7 +174,8 @@ const crearOperacionFlow = {
                 const tipoCheque = opcionesCheque[message];
                 const descuento = descuentos[message];
 
-
+                let montoTotal = 0
+                let montoReciboTotal = 0
                 await sock.sendMessage(userId, {
                     text: `✅ Perfecto, estos son los datos recopilados:`})
 
@@ -185,9 +186,13 @@ const crearOperacionFlow = {
                         cheque.descuento = descuento * cheque.monto / 100;
                         cheque.total = cheque.monto - cheque.descuentoGeneral - cheque.descuento;
                         flowData.comprobantes[i] = cheque;
+                        montoTotal += cheque.monto;
+                        montoReciboTotal += cheque.total;
 
                         await sock.sendMessage(userId, {text: generarMensajeCheque(cheque, i, flowData, descuento)});
                     }
+                    
+                    await sock.sendMessage(userId, {text:  `💰 *Total de la operación:* ${formatCurrency(montoTotal)} \n\n 💰 *Total a recibir:* ${formatCurrency(montoReciboTotal)}`});
                     
                 } else {
                     await sock.sendMessage(userId, {
