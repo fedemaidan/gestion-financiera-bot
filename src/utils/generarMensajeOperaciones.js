@@ -59,7 +59,8 @@ function generarMensajeConfirmacionOperacion(flowData, comprobante) {
         `- Descuento transferencia (2%): ${formatCurrency(comprobante.descuentoGeneral)}\n` +
         `- Descuento transferencia (1%): ${formatCurrency(comprobante.descuento)}\n` +
         `- **Total a recibir**: ${formatCurrency(comprobante.total)}\n\n` +
-        `¿Deseas confirmar esta operación?\n\n1️⃣ Confirmar\n2️⃣ Cancelar\n3️⃣ Modificar algún dato`;
+        // `¿Deseas confirmar esta operación?\n\n1️⃣ Confirmar\n2️⃣ Cancelar\n3️⃣ Modificar algún dato`;
+        `¿Deseas confirmar esta operación?\n\n1️⃣ Confirmar\n2️⃣ Cancelar`;
 }
 
 function generarMensajeModificacion(flowData, comprobante) {

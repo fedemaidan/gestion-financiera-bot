@@ -8,7 +8,7 @@ const { analizarModificacionComprobante } = require('../services/chatgpt/analiza
 const { analizarModificacionOperacion} = require('../services/chatgpt/analizarModificacionOperacion');
 const { addComprobanteToSheet } = require('../services/GoogleSheetsService');
 const { generarMensajeCheque, generarResumenOperacion, generarMensajeTransferencia, generarMensajeSeleccionProveedor, generarMensajeConfirmacionOperacion, generarMensajeModificacion } = require('../utils/generarMensajeOperaciones');
-
+const { getDescuentoGeneral } = require('../utils/getDescuentoGeneral');
 
 // Función para determinar si un paso es necesario
 const isStepRequired = (step, chequeType) => {
@@ -63,7 +63,7 @@ const crearOperacionFlow = {
                     let montoTotal = 0;
                     for (let index = 0; index < comprobantes.cheques.length; index++) {
                         const cheque = comprobantes.cheques[index];
-                        comprobantes.cheques[index].descuentoGeneral = 1.8 * cheque.monto / 100;
+                        comprobantes.cheques[index].descuentoGeneral = getDescuentoGeneral(cheque, "CHEQUE")//1.8 * cheque.monto / 100;
                         comprobantes.cheques[index].tipo = "CHEQUE";
                         comprobantes.cheques[index].fecha = getFechaFirestore(null);
                         montoTotal += cheque.monto;
@@ -84,15 +84,16 @@ const crearOperacionFlow = {
                     break;
                 case "TRANSFERENCIA": 
                     const transferencia = comprobantes;
-                    transferencia.descuentoGeneral = 2 * transferencia.monto / 100;
+                    transferencia.descuentoGeneral = getDescuentoGeneral(transferencia, "TRANSFERENCIA")
                     transferencia.fecha = getFechaFirestore(null);
                     await sock.sendMessage(userId, {
                         text: generarMensajeTransferencia(transferencia, { clienteEmisor: null, clienteReceptor: null }),
                     });
                     
-                    FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.CLIENTE_EMISOR, { comprobantes: [transferencia], tipoOperacion: "TRANSFERENCIA" });
+                    FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.QUERES_MODIFICAR_CHEQUE, { comprobantes: [transferencia], tipoOperacion: "TRANSFERENCIA" });
                     await sock.sendMessage(userId, {
-                        text: '2️⃣ ¿Quién es el cliente que envía la transferencia? (Escribe el nombre).',
+                        text: 'Confirmar si los datos están correctos:\n\n' +
+                        '1️⃣ Si, continuemos\n2️⃣ No, modificar datos de la transferencia',
                     });
                     break; 
             }
@@ -222,16 +223,27 @@ const crearOperacionFlow = {
                 if (message === '1') {
                     // Si el usuario no quiere modificar, pasamos al siguiente paso
                     FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.CLIENTE_EMISOR, flowData);
-                    await sock.sendMessage(userId, { text: '2️⃣ ¿Quién es el cliente que envía la transferencia? (Escribe el nombre).' });
+                    await sock.sendMessage(userId, { text: '2️⃣ ¿Quién es el cliente que envía? (Escribe el nombre).' });
                 } else if (message === '2') {
-                    // Si hay varios cheques, mostrar la lista para elegir cuál modificar
-                    let mensaje = '✏️ ¿Qué cheque deseas modificar? Envía el número correspondiente:\n\n';
-                    flowData.comprobantes.forEach((cheque, index) => {
-                        mensaje += `${index + 1}️⃣ ${formatCurrency(cheque.monto)} - ${cheque.banco_emisor}\n`;
-                    });
-            
-                    FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.SELECCIONO_CHEQUE, flowData);
-                    await sock.sendMessage(userId, { text: mensaje });
+                    if (flowData.comprobantes.length === 1) { 
+                        // Si solo hay un cheque, modificarlo directamente
+                        flowData.comprobanteSeleccionado = 0;
+                        flowData.comprobantes[0].descuentoGeneral = getDescuentoGeneral(flowData.comprobantes[0], flowData.tipoOperacion);
+                        FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.MODIFICA_CHEQUE, flowData);
+                        
+                        await sock.sendMessage(userId, {
+                            text: `✏️ Escribe qué dato deseas modificar (Ejemplo: "El monto es incorrecto, debe ser 50,000").`,
+                        });
+                    } else {
+                        // Si hay varios cheques, mostrar la lista para elegir cuál modificar
+                        let mensaje = '✏️ ¿Qué cheque deseas modificar? Envía el número correspondiente:\n\n';
+                        flowData.comprobantes.forEach((cheque, index) => {
+                            mensaje += `${index + 1}️⃣ ${formatCurrency(cheque.monto)} - ${cheque.banco_emisor}\n`;
+                        });
+                
+                        FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.SELECCIONO_CHEQUE, flowData);
+                        await sock.sendMessage(userId, { text: mensaje });
+                    }
                 } else {
                     await sock.sendMessage(userId, { text: '⚠️ Respuesta no válida. Escribe 1️⃣ para continuar o 2️⃣ para modificar un cheque.' });
                 }
@@ -255,7 +267,7 @@ const crearOperacionFlow = {
                 if (chequeModificar) {
                     const respuesta = await analizarModificacionComprobante(chequeModificar, message);
                     flowData.comprobantes[flowData.comprobanteSeleccionado] = { ...chequeModificar, ...respuesta.respuesta };
-            
+                    flowData.comprobantes[flowData.comprobanteSeleccionado].descuentoGeneral = getDescuentoGeneral(flowData.comprobantes[flowData.comprobanteSeleccionado], flowData.tipoOperacion);
                     FlowManager.setFlow(userId, 'CREAR_OPERACION', STEPS.QUERES_MODIFICAR_CHEQUE, flowData);
             
                     await sock.sendMessage(userId, {
